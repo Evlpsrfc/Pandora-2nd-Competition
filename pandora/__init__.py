@@ -50,7 +50,6 @@ def create_app():
         from hashlib import md5
         import base64
         url = str(request.query_string, 'utf-8')
-        filepath = 'tmp.png'
         if url[-1] == 'g':
             image_src = get(url).content
         else:
@@ -59,9 +58,9 @@ def create_app():
         image_src = base64.b64decode(image_src)
         image = Image.open(BytesIO(image_src))
         image = image.resize((100, 100), Image.ANTIALIAS)
-        image.save(filepath)
-        with open(filepath,'rb') as f:
-            image_byte = f.read()
+        output_buffer = BytesIO()
+        image.save(output_buffer, format='png')
+        image_byte = output_buffer.getvalue()
         md5code = md5(image_byte).hexdigest()
         base64code = base64.b64encode(image_byte)
         json = {
