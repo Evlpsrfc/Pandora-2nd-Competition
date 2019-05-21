@@ -57,16 +57,18 @@ def create_app():
         else:
             with open(url, 'r') as f:
                 image_src = base64.b64decode(f.read())
-            with open(filepath, 'bw') as img:
+            with open(filepath, 'wb') as img:
                 img.write(image_src)
             image = Image.open(filepath)
         image = image.resize((100, 100), Image.ANTIALIAS)
         image.save(filepath)
-        md5code = md5(open(filepath,'rb').read()).hexdigest()
-        base64code = base64.b64encode(open(filepath,'rb').read()).decode()
+        with open(filepath,'rb') as f:
+            image_byte = f.read()
+        md5code = md5(image_byte).hexdigest()
+        base64code = base64.b64encode(image_byte)
         json = {
             "md5": md5code, 
-            "base64_picture": base64code
+            "base64_picture": str(base64code, 'utf-8')
         }
         from flask import jsonify
         return jsonify(json)
