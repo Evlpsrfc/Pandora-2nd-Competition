@@ -18,7 +18,8 @@ def create_app():
         """
         以此项目中的404.html作为此Web Server工作时的404错误页
         """
-        pass
+        from flask import render_template
+        return render_template("404.html"), 404
 
     # TODO: 完成接受 HTTP_URL 的 picture_reshape
     # TODO: 完成接受相对路径的 picture_reshape
@@ -43,6 +44,8 @@ def create_app():
         }
         """
         import PIL
+        from flask import request
+        qs = request.query_string
         pass
 
     # TODO: 爬取 996.icu Repo，获取企业名单
@@ -59,6 +62,33 @@ def create_app():
             "description": <description 描述>
         }, ...]
         """
-        pass
+        from bs4 import BeautifulSoup
+        from requests import get
+        url = r'https://github.com/996icu/996.ICU/tree/master/blacklist'
+        result = get(url)
+        soup = BeautifulSoup(result.text, 'lxml')
+        box_body = soup.find('div',attrs={"class":"Box-body"})
+        table = box_body.find_all('table')[1]
+        tr_all = table.find_all('tr')
+        JSON_List = []
+        for tr in tr_all:
+            tds = tr.find_all('td')
+            if len(tds) == 0:
+                continue
+            json = {
+                "city": tds[0].string,
+                "company": tds[1].string,
+                "exposure_time": tds[2].string,
+                "description": tds[3].string
+                }
+            JSON_List.append(json)
+        from flask import jsonify
+        app.config['JSON_AS_ASCII'] = False
+        return jsonify(JSON_List)
 
     return app
+
+
+if __name__ == '__main__':
+    app = create_app()
+    app.run()
