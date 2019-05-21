@@ -52,14 +52,12 @@ def create_app():
         url = str(request.query_string, 'utf-8')
         filepath = 'tmp.png'
         if url[-1] == 'g':
-            response = get(url)
-            image = Image.open(BytesIO(response.content))
+            image_src = get(url).content
         else:
             with open(url, 'r') as f:
-                image_src = base64.b64decode(f.read())
-            with open(filepath, 'wb') as img:
-                img.write(image_src)
-            image = Image.open(filepath)
+                image_src = f.read()
+        image_src = base64.b64decode(image_src)
+        image = Image.open(BytesIO(image_src))
         image = image.resize((100, 100), Image.ANTIALIAS)
         image.save(filepath)
         with open(filepath,'rb') as f:
@@ -72,8 +70,6 @@ def create_app():
         }
         from flask import jsonify
         return jsonify(json)
-            
-        
 
     # TODO: 爬取 996.icu Repo，获取企业名单
     @app.route('/996')
