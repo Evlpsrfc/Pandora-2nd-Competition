@@ -43,10 +43,34 @@ def create_app():
             "base64_picture": <图片reshape后的base64编码: str>
         }
         """
-        import PIL
+        from requests import get
+        from PIL import Image
         from flask import request
-        qs = request.query_string
-        pass
+        from io import BytesIO
+        from hashlib import md5
+        import base64
+        url = str(request.query_string,'utf-8')
+        if url[-1] == 'g':
+            response = get(url)
+            byte_image = BytesIO(response.content)
+            image = Image.open(byte_image)
+            image = image.resize((100, 100), Image.ANTIALIAS)
+            filepath = 'tmp.png'
+            image.save(filepath)
+            md5code = md5(open(filepath,'rb').read()).hexdigest()
+            base64code = base64.b64encode(open(filepath,'rb').read()).decode()
+        else:
+            with open(url,'r') as f:
+                base64code = f.read()
+                md5code = md5(base64.b64decode(base64code)).hexdigest()
+        json = {
+            "md5":md5code,
+            "base64_picture":base64code
+        }
+        from flask import jsonify
+        return jsonify(json)
+            
+        
 
     # TODO: 爬取 996.icu Repo，获取企业名单
     @app.route('/996')
