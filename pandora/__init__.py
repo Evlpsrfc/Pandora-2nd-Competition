@@ -49,23 +49,24 @@ def create_app():
         from io import BytesIO
         from hashlib import md5
         import base64
-        url = str(request.query_string,'utf-8')
+        url = str(request.query_string, 'utf-8')
+        filepath = 'tmp.png'
         if url[-1] == 'g':
             response = get(url)
-            byte_image = BytesIO(response.content)
-            image = Image.open(byte_image)
-            image = image.resize((100, 100), Image.ANTIALIAS)
-            filepath = 'tmp.png'
-            image.save(filepath)
-            md5code = md5(open(filepath,'rb').read()).hexdigest()
-            base64code = base64.b64encode(open(filepath,'rb').read()).decode()
+            image = Image.open(BytesIO(response.content))
         else:
-            with open(url,'r') as f:
-                base64code = f.read()
-                md5code = md5(base64.b64decode(base64code)).hexdigest()
+            with open(url, 'r') as f:
+                image_src = base64.b64decode(f.read())
+            with open(filepath, 'bw') as img:
+                img.write(image_src)
+            image = Image.open(filepath)
+        image = image.resize((100, 100), Image.ANTIALIAS)
+        image.save(filepath)
+        md5code = md5(open(filepath,'rb').read()).hexdigest()
+        base64code = base64.b64encode(open(filepath,'rb').read()).decode()
         json = {
-            "md5":md5code,
-            "base64_picture":base64code
+            "md5": md5code, 
+            "base64_picture": base64code
         }
         from flask import jsonify
         return jsonify(json)
